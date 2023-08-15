@@ -6,7 +6,8 @@
 
 .profile-image {
   border-radius: 50%;
-  border: 4px solid rgb(255, 255, 255);
+  border: 1px solid rgb(51, 43, 43);
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
   width: 15em;
   height: 15em;
   object-fit: cover;
@@ -22,7 +23,7 @@
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 body {
   font-family: "Poppins", sans-serif;
-  background: #fafafa;
+  /* background: #fafafa; */
 }
 
 p {
@@ -67,10 +68,13 @@ a:focus {
     SIDEBAR STYLE
 ----------------------------------------------------- */
 
-.wrapper {
+.wrapper2 {
   display: flex;
-  width: 100%;
-  align-items: stretch;
+  flex-direction: row;
+  width: auto;
+  margin: 0 8em;
+  background-color: #e4e6eb;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
 #sidebar {
@@ -100,7 +104,6 @@ a:focus {
 
 #sidebar ul.components {
   padding: 20px 0;
-  border-bottom: 1px solid #47748b;
 }
 
 #sidebar ul p {

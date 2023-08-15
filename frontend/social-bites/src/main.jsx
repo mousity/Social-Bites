@@ -13,19 +13,15 @@ import AuthProvider from "./contexts/AuthContext";
 import Contact from "./Contact/Contact";
 import AboutApp from "./AboutApp/AboutApp";
 import RestaurantPage from "./RestaurantPage/RestaurantPage";
-import User from "./UserSettings/User";
-import Account from "./UserSettings/Account/Account";
-import Reviews from "./UserSettings/Reviews/Reviews";
-import Events from "./UserSettings/Events/Events";
-import Favorite from "./UserSettings/Favorite/Favorite";
-import Delete from "./UserSettings/Delete/delete";
+import User, { userSettingsLoader } from "./UserSettings/User";
+import Account, { editUserAction } from "./UserSettings/Account/Account";
+import Delete, { deleteUserAction } from "./UserSettings/Delete/delete";
 import UserPage from "./UserPage/UserPage";
 import RestaurantReviews, {
   reviewsLoader,
 } from "./RestaurantPage/RestaurantReviews/RestaurantReviews";
 // import UserReviews, { userReviewsLoader } from "./UserPage/UserReviews";
-import UserReviews from "./UserPage/UserReviews";
-import { load } from "./Loader/loadRestaurants";
+
 
 // ----- Middleware components ----- ///
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -48,13 +44,17 @@ import {
 import SearchPage from "./Search/SearchPage";
 import { searchRestaurantLoader } from "./Loader/loadRestaurants";
 
-import RestaurantSettings from "./RestaurantSettings/RestaurantSettings";
-import AddRestaurant from "./RestaurantSettings/AddRestaurant/AddRestaurant";
-import EditRestaurant from "./RestaurantSettings/EditRestaurant/EditRestaurant";
-import addRestaurantAction from "./RestaurantSettings/AddRestaurant/AddRestaurant";
-import AddEvent from "./RestaurantSettings/AddEvent/AddEvent";
-import PastEvents from "./RestaurantSettings/PastEvents/PastEvents";
-import DeleteRestaurant from "./RestaurantSettings/DeleteRestaurant/DeleteRestaurant";
+import RestaurantSettings, {
+  restaurantSettingsLoader,
+} from "./RestaurantSettings/RestaurantSettings";
+
+import EditRestaurant, {
+  editRestaurantAction,
+} from "./RestaurantSettings/EditRestaurant/EditRestaurant";
+
+import DeleteRestaurant, {
+  deleteAction,
+} from "./RestaurantSettings/DeleteRestaurant/DeleteRestaurant";
 import RestaurantPost, {
   postLoader,
 } from "./RestaurantPage/RestaurantPosts/RestaurantPost";
@@ -63,18 +63,37 @@ import AddPost, {
   // loader as addPostLoader,
 } from "./RestaurantPage/RestaurantPosts/AddPost";
 import DeletePost, {
-  action as deletePostAction} from "./RestaurantPage/RestaurantPosts/DeletePost";
-  import AddReview, { action as addReviewAction} from "./RestaurantPage/RestaurantReviews/AddReview";
+  action as deletePostAction,
+} from "./RestaurantPage/RestaurantPosts/DeletePost";
+import AddReview, {
+  action as addReviewAction,
+} from "./RestaurantPage/RestaurantReviews/AddReview";
+import UserAddRestaurant, {
+  userAddRestaurantAction,
+} from "./UserPage/UserAddRestaurant/UserAddRestaurant";
+import AllRestaurants, {
+  allRestaurantsLoader,
+} from "./RestaurantSettings/AllRestaurants/AllRestaurants";
+import Tags, { loadTag } from "./UserSettings/Tags/Tags";
+
+// modal window for post
+import PostModal from "./Component/ModalWindow/ModalWindow";
+import UserReviews from "./UserPage/UserReviews";
+import UserRestaurants from "./UserPage/UserRestaurants";
+
+// map container
+import MapContainer from "./RestaurantPage/RestaurantMap/RestaurantMap";
+
+import { restaurantByIdLoader } from "./Loader/loadRestaurants";
+
 
 const router = createBrowserRouter([
   {
     path: "/",
-    loader: load,
     element: <NavBar />,
     children: [
       {
         path: "/",
-        loader: load,
         element: <Home />,
         children: [
           {
@@ -92,9 +111,16 @@ const router = createBrowserRouter([
             loader: nearbyRestaurantLoader,
           },
           {
-            path: "/all_events",
+            path: "/explore",
             element: <RestaurantEventDisplay />,
             loader: allEventsLoader,
+            children:
+            [
+              {
+                path: "/explore/:postId",
+                element: <PostModal/>
+              }
+            ]
           },
           {
             path: "/nearby_restaurant_post",
@@ -111,6 +137,15 @@ const router = createBrowserRouter([
             loader: interestedEventLoader,
           },
         ],
+      },
+      {
+        path:"/restaurant/:restaurantId/map",
+        element: (
+          <ShareLocationRequired>
+            <MapContainer/>
+          </ShareLocationRequired>
+        ),
+        loader: restaurantByIdLoader,
       },
       {
         path: "/search/:keywordTerm",
@@ -149,57 +184,68 @@ const router = createBrowserRouter([
         path: "/user/:id",
         // loader: userReviewsLoader,
         element: <UserPage />,
-      },
-      {
-        path: "/user/settings",
-        element: <User />,
         children: [
           {
-            path: "/user/settings/account",
+            path: "/user/:id",
+            element: <UserReviews />
+          },
+          {
+            path: "/user/:id/restaurants",
+            element: <UserRestaurants />
+          }
+        ]
+      },
+      {
+        path: "/addrestaurant",
+        action: userAddRestaurantAction,
+        element: <UserAddRestaurant />,
+      },
+      {
+        path: "/user/:id/settings",
+        element: <User />,
+        loader: userSettingsLoader,
+        children: [
+          {
+            path: "/user/:id/settings/account",
             element: <Account />,
+            action: editUserAction,
           },
           {
-            path: "/user/settings/reviews",
-            element: <Reviews />,
-          },
-          {
-            path: "/user/settings/events",
-            element: <Events />,
-          },
-          {
-            path: "/user/settings/favorite",
-            element: <Favorite />,
-          },
-          {
-            path: "/user/settings/delete",
+            path: "/user/:id/settings/delete",
             element: <Delete />,
+            action: deleteUserAction,
+          },
+          {
+            path: "/user/:id/settings/tags",
+            element: <Tags />,
+            loader: loadTag,
           },
         ],
       },
       {
-        path: "/restaurant/settings",
+        path: "/user/settings/tags",
+        element: <Tags />,
+      },
+      {
+        path: "/restaurant/:id/settings",
         element: <RestaurantSettings />,
+        loader: restaurantSettingsLoader,
         children: [
           {
-            path: "/restaurant/settings/add",
-            element: <AddRestaurant />,
-            action: <addRestaurantAction />,
+            path: "/restaurant/:id/settings/all",
+            element: <AllRestaurants />,
+            loader: allRestaurantsLoader,
           },
           {
-            path: "/restaurant/settings/edit",
+            path: "/restaurant/:id/settings/edit",
             element: <EditRestaurant />,
+            action: editRestaurantAction,
           },
+
           {
-            path: "/restaurant/settings/addevent",
-            element: <AddEvent />,
-          },
-          {
-            path: "/restaurant/settings/pastevents",
-            element: <PastEvents />,
-          },
-          {
-            path: "/restaurant/settings/delete",
+            path: "/restaurant/:id/settings/delete",
             element: <DeleteRestaurant />,
+            action: deleteAction,
           },
         ],
       },
@@ -221,14 +267,14 @@ const router = createBrowserRouter([
           {
             path: "/restaurant/:restaurantId/review/new",
             element: (
-            <ProtectedRoute>
-              <AddReview />
-            </ProtectedRoute>
-          ),
-          action: addReviewAction,
-          // loader: addPostLoader,
-        }
-        ]
+              <ProtectedRoute>
+                <AddReview />
+              </ProtectedRoute>
+            ),
+            action: addReviewAction,
+            // loader: addPostLoader,
+          },
+        ],
       },
       {
         path: "/restaurant/:restaurantId/post/new",

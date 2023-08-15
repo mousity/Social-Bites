@@ -1,10 +1,12 @@
 import "./RestaurantPageStyle.css";
 import { GrContact } from "react-icons/gr";
 import {
+  MdHome,
   MdOutlineRateReview,
   MdOutlineRestaurantMenu,
   MdStarRate,
 } from "react-icons/md";
+import { FaStar } from "react-icons/fa"
 import RestaurantCards from "../RestaurantCards/RestaurantCards";
 import RestaurantPost from "./RestaurantPosts/RestaurantPost";
 import { Outlet, useLocation, Link } from "react-router-dom/dist/umd/react-router-dom.development";
@@ -14,6 +16,7 @@ import { useEffect, useState } from "react";
 export default function RestaurantPage() {
   const { restaurantId } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  const [average, setAverage] = useState(null);
 
   useEffect(() => {
     // function to fetch restaurant by id
@@ -31,13 +34,55 @@ export default function RestaurantPage() {
     fetchRestaurantById();
   }, [restaurantId]); // The useEffect hook will re-run whenever the restaurantId changes.
 
+  async function getReviewTotal(id) {
+    let counter = 0;
+    const response = await fetch(`/api/review/${id}`);
+    const reviews = await response.json();
+    reviews.map(element => {
+      counter++;
+    });
+    return counter; // Return the review data
+  }
 
+  async function getReviewRatings(id) {
+    let total = 0;
+    const response = await fetch(`/api/review/${id}`);
+    const reviews = await response.json();
+    reviews.map(element => {
+      total += element.rate;
+    });
+    return total; // Return the review data
+  }
+
+  function getStars(numStars) {
+    const num = Math.round(numStars);
+    const stars = [];
+    for(let i = 1; i <= num; i++) {
+        stars.push(<FaStar size={30} style={{color: "orange"}}/>)
+    }
+    return stars;
+}
+
+  function getAverage(counter, total) {
+    return Math.floor(total / counter);
+  }
+
+useEffect(() => {
+  async function fetchData() {
+      let counter = await getReviewTotal(restaurantId);  // Fetch the reviews but don't set the state here
+      let total = await getReviewRatings(restaurantId);
+      setAverage(getAverage(counter, total));
+      console.log(average);
+  }
+  fetchData();
+  
+}, []);
   const location = useLocation();
 
   return (
     <>
       {restaurant ? (
-      <>
+      <div className="">
         <div className="main-wrap">
           <div className="wrapper1">
             <div className="restaurant-page">
@@ -58,8 +103,16 @@ export default function RestaurantPage() {
               src={restaurant.profileImage}
             ></img>
 
-              <ul className="list-unstyled components">
+              <ul className="list-unstyled components flex flex-col">
                 <p className="res-name">{restaurant.restaurantName}</p>
+                <p className="flex flex-row gap-1">Rating: {...getStars(average)}</p>
+
+                <li className="flex flex-row items-center justify-start px-5 py-5">
+                  <div className="icons">
+                    <MdHome size={25} />
+                  </div>
+                  <Link to={`/restaurant/${restaurantId}`} >Home</Link>
+                </li>
                 <li className="flex flex-row items-center justify-start px-5 py-5">
                   <div className="icons">
                     <MdOutlineRateReview size={25} />
@@ -76,17 +129,10 @@ export default function RestaurantPage() {
                   <div className="icons">
                     <GrContact size={25} />
                   </div>
-                  <a href="#">Contact</a>
+                  <Link to={`/restaurant/${restaurantId}/map`}>Direction</Link>
                 </li>
               </ul>
 
-              <ul className="list-unstyled CTAs">
-                <li>
-                  <a href="/" className="article">
-                    Back to home
-                  </a>
-                </li>
-              </ul>
             </nav>
             <div id="contentz">
               { location.pathname === `/restaurant/${restaurantId}/review` ? <Link
@@ -106,7 +152,7 @@ export default function RestaurantPage() {
               </div>
             ) : null}
           </div>
-          </>
+          </div>
       ) : (
         <p>Loading...</p>
       )}

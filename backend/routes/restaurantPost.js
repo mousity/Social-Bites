@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Restaurant, Post, Comment, sequelize, Tag, UserTag, PostTag} = require("../models");
+const { Restaurant, Post, Comment, sequelize, Tag, UserTag, PostTag, User} = require("../models");
 const { autheticateUser } = require("../middleware/authUser");
 const { userAllowPostion } = require("../middleware/userAllowPostion");
 const { Op,QueryTypes } = require("sequelize");
@@ -14,7 +14,17 @@ router.get("/:restaurantId", async (req, res)=>{
         const posts = await Post.findAll({
             where: {
                 RestaurantId: restaurantId
+            },
+            include: 
+            [{
+                model: User,
+                attributes: ["username"]
+            },
+            {
+                model: Restaurant,
+                attributes: ["restaurantName", "profileImage", "id"]
             }
+        ],
         });
 
         // If all okay, return response of all posts
@@ -26,6 +36,41 @@ router.get("/:restaurantId", async (req, res)=>{
         const errorMessage = error.message;
         return res.status(500).json({
             message: "An error occured when fetching for restaurants",
+            error: errorMessage
+        })
+    }
+});
+
+// Get post by post id
+router.get("/post/:postId", async (req, res)=>{
+    const postId = parseInt(req.params.postId, 10);
+    try{
+        // Find all posts where Id is equal to our parsed parameter
+        const post = await Post.findOne({
+            where: {
+                id: postId
+            },
+            include: 
+            [{
+                model: User,
+                attributes: ["username"]
+            },
+            {
+                model: Restaurant,
+                attributes: ["restaurantName", "profileImage", "id"]
+            }
+        ],
+        });
+
+        // If all okay, return post
+        return res.status(200).json(post);
+
+    // Catch errors during runtime
+    } catch(error) {
+        // Log a message
+        const errorMessage = error.message;
+        return res.status(500).json({
+            message: "An error occured when fetching for post",
             error: errorMessage
         })
     }
@@ -94,7 +139,8 @@ router.post("/:restaurantId", autheticateUser, async(req, res)=>{
             UserId: parseInt(req.session.userId,10),
             RestaurantId: restauarantId,
             postTitle: req.body.postTitle,
-            postContent: req.body.postContent
+            postContent: req.body.postContent,
+            postImg: req.body.postImg
         });
 
         // add all post into the post_tag table
@@ -117,14 +163,13 @@ router.post("/:restaurantId", autheticateUser, async(req, res)=>{
     }
 });
 
-//post a comment onto a restaurant post
-router.post("/:restaurantId/:postId/comment", autheticateUser, async(req, res)=>{
-    const restaurantId = parseInt(req.params.restaurantId,10);
+//post a comment onto a post
+router.post("/:postId/comment", autheticateUser, async(req, res)=>{
     const postId = parseInt(req.params.postId,10);
 
     try{
         // fetch for the postId and restaurantId to see if they exist
-        const post = await Post.findOne({where: {id: postId, RestaurantId: restaurantId}});
+        const post = await Post.findOne({where: {id: postId}});
 
         // if post exist, create a new comment
         if (post){
@@ -158,7 +203,14 @@ router.get("/:postId/comment", async(req, res)=>{
 
     try{
         // fetch for the postId and restaurantId to see if they exist
-        const comments = await Comment.findAll({where: {PostId: postId}});
+        const comments = await Comment.findAll({
+            where: {PostId: postId},
+            include: {
+                model: User,
+                attributes: ["username", "profileImage"]
+            },
+            order: [["createdAt", "DESC"]],
+        });
 
         // if post exist, create a new comment
         if (comments.length > 0){
@@ -172,7 +224,7 @@ router.get("/:postId/comment", async(req, res)=>{
     }catch(error){
         const errorMessage = error.message;
         return res.status(500).json({
-            message: "An error occured while creating a post",
+            message: "An error occured when fetching comments",
             error: errorMessage
         });
     }
@@ -207,10 +259,15 @@ router.get("/user/nearby_post/:radiusKm", userAllowPostion, async(req,res)=>{
                     [Op.in]: nearbyRestaurantList,
                   },
                 },
-                include: {
-                  model: Restaurant,
-                  attributes: ["restaurantName"],
+                include: [
+                {
+                    model: User,
+                    attributes: ["username"]
                 },
+                {
+                  model: Restaurant,
+                  attributes: ["restaurantName", "profileImage", "id"],
+                }],
               });
         
         
@@ -244,7 +301,17 @@ router.get("/user/interested_post", autheticateUser,async (req, res) => {
                 TagId: {
                     [Op.in]: userInterestedTagId
                 }
+            },
+            include: 
+            [{
+                model: User,
+                attributes: ["username"]
+            },
+            {
+                model: Restaurant,
+                attributes: ["restaurantName", "profileImage", "id"]
             }
+        ],
         });
         const userInterestedPostsId = userInterestedPosts.map((element) => { return element.PostId });
 
@@ -257,7 +324,7 @@ router.get("/user/interested_post", autheticateUser,async (req, res) => {
             },
             include: {
                 model: Restaurant,
-                attributes: ["restaurantName"],
+                attributes: ["restaurantName", "profileImage", "id"],
               }
         });
 
@@ -402,10 +469,16 @@ router.get("/", async (req, res)=>{
                     [Op.ne]: null,
                   },
             },
-            include: {
+            include: [
+                {
+                    model: User,
+                    attributes: ["username"]
+                }
+                ,
+                {
                 model: Restaurant,
-                attributes: ["restaurantName"],
-              },
+                attributes: ["restaurantName", "profileImage", "id"],
+                }],
         });
         return res.status(200).json(posts);
     }catch(error){
