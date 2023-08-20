@@ -93,7 +93,7 @@ export default function NavBar() {
               label={
                 <Avatar
                   alt="User settings"
-                  img="/src/assets/default-avatar.webp"
+                  img={ currentUser ? currentUser.profileImage : "/src/assets/default-avatar.webp"}
                   rounded
                 />
               }
