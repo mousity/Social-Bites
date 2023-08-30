@@ -1,6 +1,6 @@
 # Social-Bites
 
-Social Bites is a capstone project worked on by me and three great collaborators. The source is forked from the original repo, where most of the work was done. You can find this project deployed on https://social-bites.com/ for demonstration purposes only. The concept is a social media-esque site for restaurants and users to come together for events, deals, and honest reviews. This project was built over the course of about 3 weeks, and thought parts may seem slightly off, I feel we have done pretty well for being very new to web development. It can certainly use some polishing at a later date.
+Social Bites is a capstone project worked on by me and three great collaborators. The source is forked from the original repo, where most of the work was done. We have since decided to separate our versions of the repo, but you can still find the original in the fork link. You can find this project deployed on https://social-bites.com/ for demonstration purposes only. The concept is a social media-esque site for restaurants and users to come together for events, deals, and honest reviews. This project was built over the course of about 3 weeks, and thought parts may seem slightly off, I feel we have done pretty well for being very new to web development. It can certainly use some polishing at a later date.
 
 ## Stack
 
